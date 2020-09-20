@@ -36,6 +36,16 @@ export default class App extends Component {
         this.recorder.onstop = e => {
             const blob = new Blob(this.chunks, {type: recordingConfig});
             this.downloadBlob(blob);
+
+            clearInterval(this.timer);
+
+            if (this.stream !== null) {
+                this.stream.getTracks().forEach(track => track.stop());
+                this.stream = null;
+            }
+
+            document.getElementById('video').srcObject = null;
+            this.setState({recording: false, finished: true});
         }
 
         this.setState({recording: true, startTime: this.getCurrentTime()});
@@ -53,23 +63,10 @@ export default class App extends Component {
         a.href = url
         a.download = 'video.webm';
         a.innerText = 'Save Recording';
-        // window.URL.revokeObjectURL(url);
-        // a.click();
-        // document.body.removeChild(a);
     }
 
     stopRecording = async () => {
-        if (this.stream === null) return;
-
-        clearInterval(this.timer);
-
         this.recorder.stop();
-
-        this.stream.getTracks().forEach(track => track.stop());
-        this.stream = null;
-
-        document.getElementById('video').srcObject = null;
-        this.setState({recording: false, finished: true});
     }
 
     getRecordingTime = () => Math.max(0, this.state.currentTime - this.state.startTime);
