@@ -37,6 +37,8 @@ body {
 .app .video-caption {
   font-size: 1.7rem;
   color: var(--color-text);
+  display: flex;
+  flex-direction: column;
 }
 .app .buttons {
   display: flex;

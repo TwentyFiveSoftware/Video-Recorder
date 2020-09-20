@@ -1,11 +1,15 @@
 import React from 'react';
 
-export default ({getRecordingTime, stopRecording, finished}) => (
+export default ({getRecordingTime, stopRecording, finished, recordingProfile, recordingSettings}) => (
     <div className={'app'}>
         <video id={'video'} autoPlay={true} muted={true}/>
-        {finished ?
-            <div className={'video-caption'}>RECORDING ENDED: Clip duration: {getRecordingTime()}s</div> :
-            <div className={'video-caption'}>RECORDING... {getRecordingTime()}s</div>}
+
+        <div className={'video-caption'}>
+            {!finished && <div>{recordingProfile} | {recordingSettings.frameRate} FPS | {recordingSettings.width}x{recordingSettings.height}</div>}
+            {!finished && <div>RECORDING... {getRecordingTime()}s</div>}
+
+            {finished && <div>RECORDING ENDED: Clip duration: {getRecordingTime()}s</div>}
+        </div>
 
         <div className={'buttons'}>
             {!finished && <div className={'button'} onClick={() => stopRecording()}>Stop Recording</div>}

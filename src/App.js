@@ -37,9 +37,9 @@ export default class App extends Component {
     getRecordingConfig = () => {
         let config = '';
 
-        if (this.state.recordingSettings.profile === 'high')
+        if (this.state.recordingSettings.profile === 'High Quality (VP9)')
             config = RECORDING_CONFIGS.high;
-        else if (this.state.recordingSettings.profile === 'medium')
+        else if (this.state.recordingSettings.profile === 'Medium Quality (H.264)')
             config = RECORDING_CONFIGS.medium;
 
         if (!MediaRecorder.isTypeSupported(config))
@@ -54,6 +54,8 @@ export default class App extends Component {
 
     getValidatedRecordingSetting = value => (value === '' || isNaN(Number(value)) || Number(value) <= 0) ? undefined : Number(value);
 
+    getVideoTrackSettings = () => this.stream !== null && this.stream.getVideoTracks().length > 0 ? this.stream.getVideoTracks()[0].getSettings() : {};
+
     startRecording = async () => {
         const {width, height, frameRate} = this.state.recordingSettings;
 
@@ -65,13 +67,6 @@ export default class App extends Component {
             },
             audio: true
         });
-
-        console.log({
-            width: this.getValidatedRecordingSetting(width),
-            height: this.getValidatedRecordingSetting(height),
-            frameRate: this.getValidatedRecordingSetting(frameRate)
-        })
-        console.log(this.getRecordingConfig())
 
         this.recorder = new MediaRecorder(this.stream, {mimeType: this.getRecordingConfig()});
         this.recorder.start();
@@ -140,6 +135,12 @@ export default class App extends Component {
     render() {
         return (!this.state.recording && !this.state.finished) ?
             <StartPage startRecording={() => this.startRecording()} recordingSettings={this.state.recordingSettings} setRecordingSettings={delta => this.setRecordingSettings(delta)}/> :
-            <RecordingPage finished={this.state.finished} getRecordingTime={() => this.getRecordingTime()} stopRecording={() => this.stopRecording()}/>;
+            <RecordingPage
+                finished={this.state.finished}
+                recordingProfile={this.state.recordingSettings.profile}
+                recordingSettings={this.getVideoTrackSettings()}
+                getRecordingTime={() => this.getRecordingTime()}
+                stopRecording={() => this.stopRecording()}
+            />;
     }
 }

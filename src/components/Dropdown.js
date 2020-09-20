@@ -9,28 +9,28 @@ export default class Dropdown extends Component {
     }
 
     options = [
-        ['High Quality (VP9)', 'high'],
-        ['Medium Quality (H.264)', 'medium']
+        'High Quality (VP9)',
+        'Medium Quality (H.264)'
     ];
 
-    componentDidMount = () => this.props.select(this.options[0][1]);
+    componentDidMount = () => this.props.select(this.options[0]);
 
     select = index => {
         this.setState({selectedIndex: index, open: false});
-        this.props.select(this.options[index][1]);
+        this.props.select(this.options[index]);
     }
 
     render() {
         return (
             <div className={'dropdown'}>
                 <div className={'dropdown__selected'} onClick={() => this.setState({open: !this.state.open})}>
-                    <div>{this.options[this.state.selectedIndex][0]}</div>
+                    <div>{this.options[this.state.selectedIndex]}</div>
                     <FontAwesomeIcon icon={this.state.open ? faAngleUp : faAngleDown}/>
                 </div>
                 {this.state.open &&
                 <div className={'dropdown__options'}>
                     {this.options.map((option, index) =>
-                        <div className={'dropdown__option'} key={index} onClick={() => this.select(index)}>{option[0]}</div>)}
+                        <div className={'dropdown__option'} key={index} onClick={() => this.select(index)}>{option}</div>)}
                 </div>
                 }
             </div>
