@@ -1,20 +1,31 @@
 import React, {Component} from 'react';
-import StartPage from './components/StartPage';
-import RecordingPage from './components/RecordingPage';
 import fixWebmDuration from 'fix-webm-duration';
 
-const recordingConfig = [
-    'video/webm; codecs="vp9, opus"',
-    'video/webm; codecs="vp8, opus"',
-    'video/webm',
-];
+import StartPage from './components/StartPage';
+import RecordingPage from './components/RecordingPage';
+
+const RECORDING_CONFIGS = {
+    high: 'video/webm; codecs="vp9, opus',
+    medium: 'video/webm; codecs="h264, opus',
+    fallbacks: [
+        'video/webm; codecs="vp8, opus"',
+        'video/webm',
+    ]
+}
 
 export default class App extends Component {
     state = {
         recording: false,
         finished: false,
         startTime: 0,
-        currentTime: 0
+        currentTime: 0,
+
+        recordingSettings: {
+            profile: '',
+            width: '',
+            height: '',
+            frameRate: ''
+        }
     }
 
     chunks = [];
@@ -23,10 +34,46 @@ export default class App extends Component {
 
     getCurrentTime = () => Math.floor(Date.now() / 1000);
 
-    startRecording = async () => {
-        this.stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: true});
+    getRecordingConfig = () => {
+        let config = '';
 
-        this.recorder = new MediaRecorder(this.stream, {mimeType: recordingConfig.find(config => MediaRecorder.isTypeSupported(config))});
+        if (this.state.recordingSettings.profile === 'high')
+            config = RECORDING_CONFIGS.high;
+        else if (this.state.recordingSettings.profile === 'medium')
+            config = RECORDING_CONFIGS.medium;
+
+        if (!MediaRecorder.isTypeSupported(config))
+            for (let c of RECORDING_CONFIGS.fallbacks)
+                if (MediaRecorder.isTypeSupported(c)) {
+                    config = c;
+                    break;
+                }
+
+        return config;
+    }
+
+    getValidatedRecordingSetting = value => (value === '' || isNaN(Number(value)) || Number(value) <= 0) ? undefined : Number(value);
+
+    startRecording = async () => {
+        const {width, height, frameRate} = this.state.recordingSettings;
+
+        this.stream = await navigator.mediaDevices.getDisplayMedia({
+            video: {
+                width: this.getValidatedRecordingSetting(width),
+                height: this.getValidatedRecordingSetting(height),
+                frameRate: this.getValidatedRecordingSetting(frameRate)
+            },
+            audio: true
+        });
+
+        console.log({
+            width: this.getValidatedRecordingSetting(width),
+            height: this.getValidatedRecordingSetting(height),
+            frameRate: this.getValidatedRecordingSetting(frameRate)
+        })
+        console.log(this.getRecordingConfig())
+
+        this.recorder = new MediaRecorder(this.stream, {mimeType: this.getRecordingConfig()});
         this.recorder.start();
 
         this.recorder.ondataavailable = e => this.chunks.push(e.data);
@@ -88,9 +135,11 @@ export default class App extends Component {
 
     getRecordingTime = () => Math.max(0, this.state.currentTime - this.state.startTime);
 
+    setRecordingSettings = delta => this.setState({recordingSettings: ({...this.state.recordingSettings, ...delta})});
+
     render() {
         return (!this.state.recording && !this.state.finished) ?
-            <StartPage startRecording={() => this.startRecording()}/> :
+            <StartPage startRecording={() => this.startRecording()} recordingSettings={this.state.recordingSettings} setRecordingSettings={delta => this.setRecordingSettings(delta)}/> :
             <RecordingPage finished={this.state.finished} getRecordingTime={() => this.getRecordingTime()} stopRecording={() => this.stopRecording()}/>;
     }
 }
